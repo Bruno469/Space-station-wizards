@@ -1,0 +1,68 @@
+- type: entity
+  id: Turbine
+  placement:
+    mode: SnapgridCenter
+  components:
+    - type: Transform
+      anchored: true
+    - type: Physics
+    - type: PowerMonitoringDevice
+      group: Generator
+      loadNode: input
+      sprite: Objects/Power/Turbine.rsi
+      state: Turbine
+    - type: Turbine
+    - type: Explosive
+      explosionType: Default
+      intensitySlope: 5
+      maxIntensity: 60
+    - type: PowerSupplier
+      supplyRate: 0
+    - type: Electrified
+      onHandInteract: false
+      onInteractUsing: false
+      onBump: false
+      highVoltageNode: input
+      mediumVoltageNode: turbine
+
+- type: entity
+  id: Compressor
+  name: Compressor
+  description: compresses the air.
+  placement:
+    mode: SnapgridCenter
+  components:
+    - type: Compressor
+    - type: Sprite
+      sprite: Objects/Power/Compressor.rsi
+      state: Compressor
+    - type: Physics
+    - type: Damageable
+      damageContainer: Inorganic
+      damageModifierSet: Metallic
+    - type: Destructible
+      thresholds:
+      - trigger:
+          !type:DamageTrigger
+          damage: 100
+        behaviors:
+        - !type:SpawnEntitiesBehavior
+          spawn:
+            SheetSteel1:
+              min: 2
+              max: 5
+        - !type:DoActsBehavior
+          acts: ["Destruction"]
+    - type: Transform
+      anchored: true
+    - type: NodeContainer
+      nodes:
+        turbine:
+          !type:AdjacentNode
+          nodeGroupID: TurbineEngine
+    - type: Electrified
+      onHandInteract: false
+      onInteractUsing: false
+      onBump: false
+      requirePower: true
+      highVoltageNode: turbine

@@ -1,0 +1,30 @@
+<DefaultWindow xmlns="https://spacestation14.io"
+            Title="{Loc 'turbine-window-title'}"
+            MinSize="250 250">
+    <GridContainer Columns="2">
+        <BoxContainer Orientation="Horizontal">
+            <Button Name="ToggleActivated"
+                    Text="{Loc 'turbine-window-toggle-OnOff-button'}"
+                    StyleClasses="OpenBoth"
+                    Disabled="True" />
+        </BoxContainer>
+        <BoxContainer Orientation="Horizontal">
+            <Label Text="{Loc 'turbine-window-integrity-status-label'}" />
+            <Label Text=" " />
+            <Label Name="integrityAmount" Text="{Loc 'turbine-window-integrity-not-inserted-text'}" />
+        </BoxContainer>
+        <BoxContainer Orientation="Horizontal">
+            <Label Text="{Loc 'turbine-window-RPM-amount-label'}" />
+            <Label Text=" " />
+            <Label Name="RPM" Text="0" />
+        </BoxContainer>
+        <BoxContainer></BoxContainer>
+        <BoxContainer Orientation="Horizontal">
+            <Label Text="{Loc 'turbine-window-power-currentsupply-label'}" />
+            <Label Text=" " />
+            <Label Name="CurrentPowerSupply" Text="0" />
+            <Label Text=" kW" />
+        </BoxContainer>
+        <BoxContainer></BoxContainer>
+    </GridContainer>
+</DefaultWindow>
