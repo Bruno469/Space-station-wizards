@@ -9,15 +9,36 @@
     - type: PowerMonitoringDevice
       group: Generator
       loadNode: input
-      sprite: Objects/Power/Turbine.rsi
-      state: Turbine
+      sprite: Structures/Power/Generation/Turbine.rsi
+      state: icon
     - type: Turbine
+    - type: Sprite
+      sprite: Structures/Power/Generation/Turbine.rsi
+      layers: 
+        - state: icon
     - type: Explosive
       explosionType: Default
       intensitySlope: 5
       maxIntensity: 60
     - type: PowerSupplier
       supplyRate: 0
+    - type: Damageable
+      damageContainer: Inorganic
+      damageModifierSet: Metallic
+    - type: Destructible
+      thresholds:
+      - trigger:
+          !type:DamageTrigger
+          damage: 100
+        behaviors:
+        - !type:SpawnEntitiesBehavior
+          spawn:
+            SheetSteel1:
+              min: 1
+              max: 1
+        - !type:DoActsBehavior
+          acts: ["Destruction"]
+    - type: Pullable
     - type: Electrified
       onHandInteract: false
       onInteractUsing: false
@@ -34,8 +55,8 @@
   components:
     - type: Compressor
     - type: Sprite
-      sprite: Objects/Power/Compressor.rsi
-      state: Compressor
+      sprite: Structures/Power/Generation/Compressor.rsi
+      state: icon
     - type: Physics
     - type: Damageable
       damageContainer: Inorganic
@@ -60,6 +81,10 @@
         turbine:
           !type:AdjacentNode
           nodeGroupID: TurbineEngine
+    - type: Sprite
+      sprite: Structures/Power/Generation/Compressor.rsi
+      layers: 
+        - state: icon
     - type: Electrified
       onHandInteract: false
       onInteractUsing: false
