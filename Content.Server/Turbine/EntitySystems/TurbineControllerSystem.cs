@@ -7,26 +7,27 @@ using Content.Server.Chat.Managers;
 using Content.Server.NodeContainer;
 using Content.Server.Power.Components;
 using Content.Shared.Turbine;
-using Content.Shared.Database;
-using Content.Shared.Hands.Components;
 using Content.Shared.Hands.EntitySystems;
-using Content.Shared.Interaction;
-using Content.Shared.Mind.Components;
 using Content.Shared.Popups;
 using Robust.Server.Containers;
 using Robust.Server.GameObjects;
 using Robust.Shared.Audio;
 using Robust.Shared.Audio.Systems;
-using Robust.Shared.Containers;
-using Robust.Shared.Player;
 using Robust.Shared.Timing;
 
 namespace Content.Server.Turbine.EntitySystems;
 
 public sealed class TurbineControllerSystem : EntitySystem
 {
-    /*
+    [Dependency] private readonly IAdminLogManager _adminLogger = default!;
+    [Dependency] private readonly IAdminManager _adminManager = default!;
+    [Dependency] private readonly IChatManager _chatManager = default!;
     [Dependency] private readonly IGameTiming _gameTiming = default!;
+    [Dependency] private readonly AppearanceSystem _appearanceSystem = default!;
+    [Dependency] private readonly ContainerSystem _containerSystem = default!;
+    [Dependency] private readonly SharedAudioSystem _audioSystem = default!;
+    [Dependency] private readonly SharedHandsSystem _handsSystem = default!;
+    [Dependency] private readonly SharedPopupSystem _popupSystem = default!;
     [Dependency] private readonly UserInterfaceSystem _userInterfaceSystem = default!;
 
     public const bool CompressorOn = false;
@@ -34,27 +35,50 @@ public sealed class TurbineControllerSystem : EntitySystem
     {
         base.Initialize();
 
-        SubscribeLocalEvent<TurbineComponent, ComponentStartup>(OnComponentStartup);
-        SubscribeLocalEvent<TurbineComponent, InteractUsingEvent>(OnInteractUsing);
-        SubscribeLocalEvent<TurbineComponent, PowerChangedEvent>(OnPowerChanged);
-        SubscribeLocalEvent<TurbineComponent, UiButtonPressedMessage>(OnUiButtonPressed);
+        SubscribeLocalEvent<TurbineControllerComponent, UiButtonPressedMessage>(OnUiButtonPressed);
+    }
+    private TurbineControllerBoundUserInterfaceState GetUiState(EntityUid uid, TurbineComponent turbine, CompressorComponent compressor)
+    {
+        float currentPowerSupply = 0;
+        // set current power statistics in kW
+        if (TryGetTurbineNodeGroup(uid, out var group))
+        {
+            currentPowerSupply = group.CalculatePower(turbine.RPM);
+        }
+        if (TryComp<PowerSupplierComponent>(uid, out var powerOutlet) && turbine.RPM > 0)
+        {
+            currentPowerSupply = powerOutlet.CurrentSupply;
+        }
+        return new TurbineControllerBoundUserInterfaceState(true, true, turbine.RPM, currentPowerSupply);
+    }
+
+    public void UpdateUi(EntityUid uid, TurbineControllerComponent? controller = null, CompressorComponent? compressor = null, TurbineComponent? turbine = null)
+    {
+        if (!Resolve(uid, ref controller))
+            return;
+
+        if (!_userInterfaceSystem.TryGetUi(uid, TurbineControllerUiKey.Key, out var bui))
+            return;
+
+        var state = GetUiState(uid, turbine, compressor);
+        _userInterfaceSystem.SetUiState(bui, state);
+
+        controller.NextUIUpdate = _gameTiming.CurTime + controller.UpdateUIPeriod;
     }
     public override void Update(float frameTime)
     {
         var curTime = _gameTiming.CurTime;
-        var query = EntityQueryEnumerator<TurbineComponent, NodeContainerComponent>();
-        while (query.MoveNext(out var uid, out var controller, out var nodes))
+        var query = EntityQueryEnumerator<TurbineControllerComponent, NodeContainerComponent, TurbineComponent, CompressorComponent>();
+        while (query.MoveNext(out var uid, out var controller, out var nodes, out var turbine, out var compressor))
         {
             if (controller.NextUpdate <= curTime)
-                UpdateController(uid, curTime, controller, nodes);
+                UpdateController(uid, curTime, controller, nodes, turbine);
             else if (controller.NextUIUpdate <= curTime)
-                UpdateUi(uid, controller);
+                UpdateUi(uid, controller, compressor, turbine);
         }
     }
-    */
 
-    /*
-    private void UpdateController(EntityUid uid, TimeSpan curTime, TurbineComponent? controller = null, NodeContainerComponent? nodes = null)
+    private void UpdateController(EntityUid uid, TimeSpan curTime, TurbineControllerComponent? controller = null, NodeContainerComponent? nodes = null, TurbineComponent turbine)
     {
         if (!Resolve(uid, ref controller))
             return;
@@ -64,47 +88,11 @@ public sealed class TurbineControllerSystem : EntitySystem
 
         if (!TryGetTurbineNodeGroup(uid, out var group, nodes))
             return;
-        controller.Stability = group.GetTotalStability();
+        turbine.Stability = group.GetTotalStability(turbine.RPM);
 
-        group.UpdateCombuterVisuals();
-        UpdateDisplay(uid, controller.Stability, controller);
-
-        if (controller.Stability <= 0)
-            group.Explode();
-    */
-
-    // public void UpdateUi(EntityUid uid, TurbineComponent? controller = null)
-    // {
-    //     if (!Resolve(uid, ref controller))
-    //         return;
-
-    //     if (!_userInterfaceSystem.TryGetUi(uid, TurbineControllerUiKey.Key, out var bui))
-    //         return;
-
-    //     var state = GetUiState(uid, controller);
-    //     _userInterfaceSystem.SetUiState(bui, state);
-
-    //     controller.NextUIUpdate = _gameTiming.CurTime + controller.UpdateUIPeriod;
-    // }
-
-    // private TurbineControllerBoundUserInterfaceState GetUiState(EntityUid uid, TurbineComponent controller)
-    // {
-    //     // set current power statistics in kW
-    //     float currentPowerSupply = group.CalculatePower(controller.RPM);
-    //     if (TryComp<PowerSupplierComponent>(uid, out var powerOutlet) && coreCount > 0)
-    //     {
-    //         currentPowerSupply = powerOutlet.CurrentSupply;
-    //     }
-    //     return new TurbineControllerBoundUserInterfaceState(powered, IsMasterController(uid), controller.ToggleActivated, jar.RotationStatus, CurrentPowerSupply);
-    // }
-
-    /*
-    private bool IsMasterController(EntityUid uid)
-    {
-        return TryGetTurbineNodeGroup(uid, out var group) && group.MasterController == uid;
+        if (turbine.Stability <= 0)
+            group.ExplodeTurbine(turbine.RPM, uid);
     }
-    */
-
     private bool TryGetTurbineNodeGroup(EntityUid uid, [MaybeNullWhen(false)] out TurbineNodeGroup group, NodeContainerComponent? nodes = null)
     {
         if (!Resolve(uid, ref nodes))
@@ -119,6 +107,26 @@ public sealed class TurbineControllerSystem : EntitySystem
             .FirstOrDefault();
 
         return group != null;
+    }
+    private void OnUiButtonPressed(EntityUid uid, TurbineControllerComponent comp, UiButtonPressedMessage msg, TurbineComponent turbine, CompressorComponent compressor)
+    {
+        var user = msg.Session.AttachedEntity;
+        if (!Exists(user))
+            return;
+
+        _audioSystem.PlayPvs(comp.ClickSound, uid, AudioParams.Default.WithVolume(-2f));
+        switch (msg.Button)
+        {
+            case UiButton.ToggleActivated:
+                CompressorActivated();
+                break;
+        }
+
+        UpdateUi(uid, comp, compressor, turbine);
+    }
+    private void CompressorActivated()
+    {
+
     }
 
 }

@@ -1,5 +1,6 @@
 - type: entity
   id: Turbine
+  name: Turbine
   placement:
     mode: SnapgridCenter
   components:

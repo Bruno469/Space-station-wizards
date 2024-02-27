@@ -42,11 +42,9 @@ public sealed class TurbineNodeGroup : BaseNodeGroup
         }
     }
 
-    /*
-    public void ExplodeTurbine(int rpm)
+    public void ExplodeTurbine(int rpm, EntityUid uid)
     {
         var radius = Math.Min(2 * rpm, 8f);
-        _entMan.System<ExplosionSystem>().TriggerExplosive(MasterController.Value, radius: radius, delete: false);
+        _entMan.System<ExplosionSystem>().TriggerExplosive(uid, radius: radius, delete: false);
     }
-    */
 }

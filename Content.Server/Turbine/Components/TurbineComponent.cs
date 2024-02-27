@@ -19,12 +19,4 @@ public sealed partial class TurbineComponent : SharedTurbineControllerComponent
     [DataField("RPM")]
     [ViewVariables(VVAccess.ReadWrite)]
     public int RPM = 0;
-
-    [DataField("Activated")]
-    [ViewVariables(VVAccess.ReadWrite)]
-    public bool IsOn = false;
-
-    [DataField("nextUpdate")]
-    public TimeSpan NextUpdate = default!;
-    public TimeSpan NextUIUpdate = default!;
 }

@@ -1063,6 +1063,7 @@
   description: It's a controller for the Turbine.
   components:
     - type: Computer
+    - type: TurbineController
     - type: Sprite
       layers:
         - map: ["computerLayerBody"]
