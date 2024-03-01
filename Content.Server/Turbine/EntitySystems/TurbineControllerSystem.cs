@@ -60,11 +60,16 @@ public sealed class TurbineControllerSystem : EntitySystem
         if (!_userInterfaceSystem.TryGetUi(uid, TurbineControllerUiKey.Key, out var bui))
             return;
 
-        var state = GetUiState(uid, turbine, compressor);
-        _userInterfaceSystem.SetUiState(bui, state);
+        // Verifica se turbine e compressor não são nulos antes de chamar GetUiState
+        if (turbine != null && compressor != null)
+        {
+            var state = GetUiState(uid, turbine, compressor);
+            _userInterfaceSystem.SetUiState(bui, state);
+        }
 
         controller.NextUIUpdate = _gameTiming.CurTime + controller.UpdateUIPeriod;
     }
+
     public override void Update(float frameTime)
     {
         var curTime = _gameTiming.CurTime;
@@ -78,7 +83,7 @@ public sealed class TurbineControllerSystem : EntitySystem
         }
     }
 
-    private void UpdateController(EntityUid uid, TimeSpan curTime, TurbineControllerComponent? controller = null, NodeContainerComponent? nodes = null, TurbineComponent turbine)
+    private void UpdateController(EntityUid uid, TimeSpan curTime, TurbineControllerComponent? controller = null, NodeContainerComponent? nodes = null, TurbineComponent? turbine = null)
     {
         if (!Resolve(uid, ref controller))
             return;
@@ -88,10 +93,16 @@ public sealed class TurbineControllerSystem : EntitySystem
 
         if (!TryGetTurbineNodeGroup(uid, out var group, nodes))
             return;
-        turbine.Stability = group.GetTotalStability(turbine.RPM);
 
-        if (turbine.Stability <= 0)
-            group.ExplodeTurbine(turbine.RPM, uid);
+        // Verifica se turbine não é nulo antes de acessar suas propriedades ou métodos
+        if (turbine != null)
+        {
+            // Acessa as propriedades ou métodos de turbine apenas se não for nulo
+            turbine.Stability = group.GetTotalStability(turbine.RPM);
+
+            if (turbine.Stability <= 0)
+                group.ExplodeTurbine(turbine.RPM, uid);
+        }
     }
     private bool TryGetTurbineNodeGroup(EntityUid uid, [MaybeNullWhen(false)] out TurbineNodeGroup group, NodeContainerComponent? nodes = null)
     {
@@ -126,7 +137,7 @@ public sealed class TurbineControllerSystem : EntitySystem
     }
     private void CompressorActivated()
     {
-
+        Console.WriteLine("Compresor Ativado");
     }
 
 }
