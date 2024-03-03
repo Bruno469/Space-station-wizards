@@ -4,8 +4,9 @@ using Content.Shared.Turbine;
 
 namespace Content.Server.Turbine.Components;
 
-[Virtual]
-public class TurbineControllerComponent : SharedTurbineControllerComponent
+[Access(typeof(TurbineControllerSystem), typeof(TurbineNodeGroup))]
+[RegisterComponent]
+public partial class TurbineControllerComponent : SharedTurbineControllerComponent
 {
     [ViewVariables]
     public TimeSpan UpdateUIPeriod = TimeSpan.FromSeconds(3.0);
